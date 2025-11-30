@@ -1,0 +1,509 @@
+﻿@model ConsumerApp.Models.ProductApproval
+
+@{
+    ViewData["Title"] = "Mahsulotni ko'rib chiqish";
+}
+
+<div class="page-container">
+    <div class="review-card">
+        <div class="review-header">
+            <h1>👁️ Mahsulotni Ko'rib Chiqish</h1>
+            <a href="@Url.Action("Index")" class="btn-back">⬅️ Orqaga</a>
+        </div>
+
+        <div class="review-content">
+            <!-- Mahsulot Ma'lumotlari -->
+            <div class="product-section">
+                <h2>📦 Mahsulot Ma'lumotlari</h2>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">Mahsulot nomi</div>
+                        <div class="info-value large">@Model.ProductName</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Producer ID</div>
+                        <div class="info-value">#@Model.ProductId</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Kategoriya</div>
+                        <div class="info-value">
+                            <span class="badge-category">@Model.Category</span>
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Narx</div>
+                        <div class="info-value price">@Model.Price.ToString("N0") so'm</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Miqdor</div>
+                        <div class="info-value">@Model.Quantity dona</div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Manufacturer))
+                    {
+                        <div class="info-card">
+                            <div class="info-label">Ishlab chiqaruvchi</div>
+                            <div class="info-value">@Model.Manufacturer</div>
+                        </div>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="description-box">
+                        <strong>📝 Ta'rif:</strong>
+                        <p>@Model.Description</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Qabul qilingan Ma'lumot -->
+            <div class="kafka-section">
+                <h2>📡 Kafka Ma'lumotlari</h2>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-label">Qabul qilingan sana</div>
+                        <div class="info-value">@Model.ReceivedDate.ToString("dd.MM.yyyy HH:mm:ss")</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-label">Holati</div>
+                        <div class="info-value">
+                            @if (Model.Status == "Approved")
+                            {
+                                <span class="status-approved">✅ Tasdiqlangan</span>
+                            }
+                            else if (Model.Status == "Rejected")
+                            {
+                                <span class="status-rejected">❌ Rad etilgan</span>
+                            }
+                            else
+                            {
+                                <span class="status-pending">⏳ Kutilmoqda</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.Status == "Pending")
+            {
+                <!-- Tasdiqlash Formlari -->
+                <div class="actions-section">
+                    <div class="action-cards">
+                        <!-- Tasdiqlash -->
+                        <div class="action-card approve-card">
+                            <h3>✅ Tasdiqlash</h3>
+                            <p>Bu mahsulot barcha talablarga javob beradi va tasdiqlashingiz mumkin.</p>
+
+                            <form method="post" action="@Url.Action("Approve", new { id = Model.Id })" class="action-form">
+                                @Html.AntiForgeryToken()
+
+                                <div class="form-group">
+                                    <label for="approveComments">Izoh (ixtiyoriy):</label>
+                                    <textarea id="approveComments"
+                                          name="comments"
+                                          class="form-control"
+                                          rows="3"
+                                          placeholder="Qo'shimcha izohlar..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-approve">
+                                    ✅ Tasdiqlash
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Rad etish -->
+                        <div class="action-card reject-card">
+                            <h3>❌ Rad Etish</h3>
+                            <p>Agar mahsulot talablarga javob bermasa, rad etish sababini ko'rsating.</p>
+
+                            <form method="post" action="@Url.Action("Reject", new { id = Model.Id })" class="action-form">
+                                @Html.AntiForgeryToken()
+
+                                <div class="form-group">
+                                    <label for="rejectionReason">Rad etish sababi <span class="required">*</span>:</label>
+                                    <select id="rejectionReason" name="rejectionReason" class="form-control" required>
+                                        <option value="">Sabab tanlang...</option>
+                                        <option value="Narx noto'g'ri">Narx noto'g'ri</option>
+                                        <option value="Miqdor noto'g'ri">Miqdor noto'g'ri</option>
+                                        <option value="Ma'lumotlar to'liq emas">Ma'lumotlar to'liq emas</option>
+                                        <option value="Kategoriya noto'g'ri">Kategoriya noto'g'ri</option>
+                                        <option value="Takrorlangan mahsulot">Takrorlangan mahsulot</option>
+                                        <option value="Boshqa sabab">Boshqa sabab</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="rejectComments">Qo'shimcha izoh:</label>
+                                    <textarea id="rejectComments"
+                                          name="comments"
+                                          class="form-control"
+                                          rows="3"
+                                          placeholder="Batafsil tushuntirish..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn btn-reject">
+                                    ❌ Rad Etish
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Ko'rib chiqilgan -->
+                <div class="reviewed-section">
+                    <h2>✅ Ko'rib Chiqilgan</h2>
+                    <div class="info-grid">
+                        @if (Model.ReviewedDate.HasValue)
+                        {
+                            <div class="info-card">
+                                <div class="info-label">Sana</div>
+                                <div class="info-value">@Model.ReviewedDate.Value.ToString("dd.MM.yyyy HH:mm")</div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.ReviewedBy))
+                        {
+                            <div class="info-card">
+                                <div class="info-label">Kim tomonidan</div>
+                                <div class="info-value">@Model.ReviewedBy</div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.RejectionReason))
+                    {
+                        <div class="rejection-box">
+                            <strong>❌ Rad etish sababi:</strong>
+                            <p>@Model.RejectionReason</p>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Comments))
+                    {
+                        <div class="comments-box">
+                            <strong>💬 Izohlar:</strong>
+                            <p>@Model.Comments</p>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f7fa;
+        line-height: 1.6;
+    }
+
+    .page-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .review-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .review-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+        .review-header h1 {
+            font-size: 1.8rem;
+            margin: 0;
+        }
+
+    .btn-back {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+    .review-content {
+        padding: 2rem;
+    }
+
+    .product-section,
+    .kafka-section,
+    .actions-section,
+    .reviewed-section {
+        margin-bottom: 2rem;
+    }
+
+    h2 {
+        color: #667eea;
+        margin-bottom: 1.5rem;
+        font-size: 1.4rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-card {
+        background: #f8f9fa;
+        padding: 1.25rem;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .info-label {
+        color: #6c757d;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        color: #212529;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+        .info-value.large {
+            font-size: 1.3rem;
+            color: #667eea;
+        }
+
+        .info-value.price {
+            color: #28a745;
+            font-size: 1.25rem;
+        }
+
+    .badge-category {
+        background: #e7f3ff;
+        color: #0066cc;
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        display: inline-block;
+    }
+
+    .status-approved,
+    .status-rejected,
+    .status-pending {
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .status-approved {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .description-box,
+    .rejection-box,
+    .comments-box {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    .rejection-box {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+    }
+
+        .description-box strong,
+        .rejection-box strong,
+        .comments-box strong {
+            display: block;
+            margin-bottom: 0.75rem;
+            color: #667eea;
+            font-size: 1.05rem;
+        }
+
+        .rejection-box strong {
+            color: #856404;
+        }
+
+        .description-box p,
+        .rejection-box p,
+        .comments-box p {
+            margin: 0;
+            color: #555;
+            line-height: 1.6;
+        }
+
+    /* Action Cards */
+    .action-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+    }
+
+    .action-card {
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .approve-card {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border: 2px solid #28a745;
+    }
+
+    .reject-card {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border: 2px solid #ffc107;
+    }
+
+    .action-card h3 {
+        margin-bottom: 0.75rem;
+        font-size: 1.3rem;
+    }
+
+    .approve-card h3 {
+        color: #155724;
+    }
+
+    .reject-card h3 {
+        color: #856404;
+    }
+
+    .action-card p {
+        color: #666;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+    .required {
+        color: #dc3545;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e1e8ed;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+        font-family: inherit;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+    textarea.form-control {
+        resize: vertical;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 0.9rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1.05rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-approve {
+        background: #28a745;
+        color: white;
+    }
+
+        .btn-approve:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+        }
+
+    .btn-reject {
+        background: #dc3545;
+        color: white;
+    }
+
+        .btn-reject:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+
+   
+
+    {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .review-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .btn-back {
+        text-align: center;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .action-cards {
+        grid-template-columns: 1fr;
+    }
+
+    }
+</style>
