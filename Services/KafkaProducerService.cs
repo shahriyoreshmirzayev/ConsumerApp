@@ -49,7 +49,7 @@ namespace ConsumerApp.Services
                 );
 
                 _logger.LogInformation(
-                    "✅ Feedback yuborildi - ProductId: {ProductId}, Status: {Status}, Topic: {Topic}, Offset: {Offset}",
+                    "Feedback yuborildi - ProductId: {ProductId}, Status: {Status}, Topic: {Topic}, Offset: {Offset}",
                     feedback.ProductId,
                     feedback.Status,
                     result.Topic,
@@ -60,12 +60,12 @@ namespace ConsumerApp.Services
             }
             catch (ProduceException<Null, string> ex)
             {
-                _logger.LogError(ex, "❌ Feedback yuborishda xatolik - Reason: {Reason}", ex.Error.Reason);
+                _logger.LogError(ex, "Feedback yuborishda xatolik - Reason: {Reason}", ex.Error.Reason);
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Feedback xatolik");
+                _logger.LogError(ex, "Feedback xatolik");
                 return false;
             }
         }

@@ -43,7 +43,7 @@ namespace ConsumerApp.Services
             using var consumer = new ConsumerBuilder<Ignore, string>(config).Build();
             consumer.Subscribe(_topic);
 
-            _logger.LogInformation("🎧 Kafka Consumer ishga tushdi - Topic: {Topic}", _topic);
+            _logger.LogInformation("Kafka Consumer ishga tushdi - Topic: {Topic}", _topic);
 
             try
             {
@@ -57,22 +57,22 @@ namespace ConsumerApp.Services
                         {
                             await ProcessMessage(consumeResult.Message.Value);
                             consumer.Commit(consumeResult);
-                            _logger.LogInformation("✅ Message processed - Offset: {Offset}", consumeResult.Offset);
+                            _logger.LogInformation("Message processed - Offset: {Offset}", consumeResult.Offset);
                         }
                     }
                     catch (ConsumeException ex)
                     {
-                        _logger.LogError(ex, "❌ Consume xatolik: {Reason}", ex.Error.Reason);
+                        _logger.LogError(ex, "Consume xatolik: {Reason}", ex.Error.Reason);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "❌ Message processing xatolik");
+                        _logger.LogError(ex, "Message processing xatolik");
                     }
                 }
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("🛑 Kafka Consumer to'xtatildi");
+                _logger.LogInformation("Kafka Consumer to'xtatildi");
             }
             finally
             {
@@ -101,7 +101,7 @@ namespace ConsumerApp.Services
 
                 if (exists)
                 {
-                    _logger.LogInformation("Mahsulot allaqachon mavjud - ID: {ProductId}", receivedProduct.Id);
+                    _logger.LogInformation("Mahsulot allaqachon mavjud ", receivedProduct.Id);
                     return;
                 }
 
@@ -122,16 +122,16 @@ namespace ConsumerApp.Services
                 context.ProductApprovals.Add(approval);
                 await context.SaveChangesAsync();
 
-                _logger.LogInformation("✅ Yangi mahsulot qabul qilindi: {ProductName} (ID: {ProductId})",
+                _logger.LogInformation("Yangi mahsulot qabul qilindi",
                     receivedProduct.Name, receivedProduct.Id);
             }
             catch (JsonException ex)
             {
-                _logger.LogError(ex, "❌ JSON parse xatolik: {Message}", message);
+                _logger.LogError(ex, "JSON parse xatolik:, message");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Database save xatolik");
+                _logger.LogError(ex, "Database save xatolik");
             }
         }
     }

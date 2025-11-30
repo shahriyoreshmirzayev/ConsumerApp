@@ -70,7 +70,7 @@ namespace ConsumerApp.Controllers
 
             if (approval.Status != "Pending")
             {
-                TempData["Error"] = "❌ Bu mahsulot allaqachon ko'rib chiqilgan!";
+                TempData["Error"] = "Bu mahsulot allaqachon ko'rib chiqilgan!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -96,11 +96,11 @@ namespace ConsumerApp.Controllers
 
             if (feedbackSent)
             {
-                TempData["Success"] = $"✅ '{approval.ProductName}' tasdiqlandi va Producer'ga xabar yuborildi!";
+                TempData["Success"] = $"'{approval.ProductName}' tasdiqlandi va Producer'ga xabar yuborildi!";
             }
             else
             {
-                TempData["Warning"] = $"⚠️ '{approval.ProductName}' tasdiqlandi, lekin Producer'ga xabar yuborilmadi!";
+                TempData["Warning"] = $"'{approval.ProductName}' tasdiqlandi, lekin Producer'ga xabar yuborilmadi!";
             }
 
             return RedirectToAction(nameof(Index));
@@ -113,7 +113,7 @@ namespace ConsumerApp.Controllers
         {
             if (string.IsNullOrWhiteSpace(rejectionReason))
             {
-                TempData["Error"] = "❌ Rad etish sababini kiriting!";
+                TempData["Error"] = "Rad etish sababini kiriting!";
                 return RedirectToAction(nameof(Review), new { id });
             }
 
@@ -124,7 +124,7 @@ namespace ConsumerApp.Controllers
 
             if (approval.Status != "Pending")
             {
-                TempData["Error"] = "❌ Bu mahsulot allaqachon ko'rib chiqilgan!";
+                TempData["Error"] = "Bu mahsulot allaqachon ko'rib chiqilgan!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -152,11 +152,11 @@ namespace ConsumerApp.Controllers
 
             if (feedbackSent)
             {
-                TempData["Success"] = $"✅ '{approval.ProductName}' rad etildi va Producer'ga xabar yuborildi!";
+                TempData["Success"] = $"'{approval.ProductName}' rad etildi va Producer'ga xabar yuborildi!";
             }
             else
             {
-                TempData["Warning"] = $"⚠️ '{approval.ProductName}' rad etildi, lekin Producer'ga xabar yuborilmadi!";
+                TempData["Warning"] = $"'{approval.ProductName}' rad etildi, lekin Producer'ga xabar yuborilmadi!";
             }
 
             return RedirectToAction(nameof(Index));
@@ -169,7 +169,7 @@ namespace ConsumerApp.Controllers
         {
             if (selectedIds == null || !selectedIds.Any())
             {
-                TempData["Error"] = "❌ Hech qanday mahsulot tanlanmagan!";
+                TempData["Error"] = "Hech qanday mahsulot tanlanmagan!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -199,7 +199,7 @@ namespace ConsumerApp.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"✅ {successCount} ta mahsulot tasdiqlandi!";
+            TempData["Success"] = $"{successCount} ta mahsulot tasdiqlandi!";
             return RedirectToAction(nameof(Index));
         }
 
