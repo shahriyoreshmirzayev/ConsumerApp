@@ -20,11 +20,11 @@ using (var scope = app.Services.CreateScope())
     try
     {
         context.Database.Migrate();
-        app.Logger.LogInformation("✅ Database migration muvaffaqiyatli bajarildi");
+        app.Logger.LogInformation("Muvaffaqiyyatli");
     }
     catch (Exception ex)
     {
-        app.Logger.LogError(ex, "❌ Database migration xatolik");
+        app.Logger.LogError(ex, "Xatolik");
     }
 }
 
