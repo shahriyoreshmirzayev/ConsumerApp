@@ -135,7 +135,8 @@ namespace ConsumerApp.Controllers
                 Status = "Rejected",
                 RejectionReason = rejectionReason,
                 ReviewedDate = approval.ReviewedDate.Value,
-                ReviewedBy = approval.ReviewedBy
+                ReviewedBy = approval.ReviewedBy,
+                Comments = comments
             };
 
             var feedbackSent = await _feedbackService.SendFeedbackAsync(feedback);
