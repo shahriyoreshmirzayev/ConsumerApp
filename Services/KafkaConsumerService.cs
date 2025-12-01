@@ -30,7 +30,7 @@ namespace ConsumerApp.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await Task.Yield(); // Background task sifatida ishlash
+            await Task.Yield(); 
 
             var config = new ConsumerConfig
             {
@@ -95,7 +95,6 @@ namespace ConsumerApp.Services
                 using var scope = _serviceProvider.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                // Avval tekshirish - bir xil mahsulot qayta qo'shilmasin
                 var exists = await context.ProductApprovals
                     .AnyAsync(p => p.ProductId == receivedProduct.Id && p.Status == "Pending");
 

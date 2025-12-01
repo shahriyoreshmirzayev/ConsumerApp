@@ -22,7 +22,6 @@ namespace ConsumerApp.Controllers
             _logger = logger;
         }
 
-        // GET: Approvals
         public async Task<IActionResult> Index(string filter = "pending")
         {
             ViewData["CurrentFilter"] = filter;
@@ -44,7 +43,6 @@ namespace ConsumerApp.Controllers
             return View(approvals);
         }
 
-        // GET: Approvals/Review/5
         public async Task<IActionResult> Review(int? id)
         {
             if (id == null)
@@ -58,7 +56,6 @@ namespace ConsumerApp.Controllers
             return View(approval);
         }
 
-        // POST: Approvals/Approve/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Approve(int id, string comments)
@@ -74,16 +71,14 @@ namespace ConsumerApp.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Status yangilash
             approval.Status = "Approved";
             approval.ReviewedDate = DateTime.UtcNow;
-            approval.ReviewedBy = "Admin"; // Keyin User.Identity.Name
+            approval.ReviewedBy = "Admin"; 
             approval.Comments = comments;
 
             _context.Update(approval);
             await _context.SaveChangesAsync();
 
-            // Feedback yuborish
             var feedback = new ApprovalFeedback
             {
                 ProductId = approval.ProductId,
@@ -106,7 +101,6 @@ namespace ConsumerApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Approvals/Reject/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reject(int id, string rejectionReason, string comments)
@@ -128,7 +122,6 @@ namespace ConsumerApp.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Status yangilash
             approval.Status = "Rejected";
             approval.ReviewedDate = DateTime.UtcNow;
             approval.ReviewedBy = "Admin";
@@ -138,7 +131,6 @@ namespace ConsumerApp.Controllers
             _context.Update(approval);
             await _context.SaveChangesAsync();
 
-            // Feedback yuborish
             var feedback = new ApprovalFeedback
             {
                 ProductId = approval.ProductId,
@@ -162,7 +154,6 @@ namespace ConsumerApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Bulk Approve
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> BulkApprove(List<int> selectedIds)
@@ -203,7 +194,6 @@ namespace ConsumerApp.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Statistics
         public async Task<IActionResult> Statistics()
         {
             var stats = new

@@ -2,7 +2,6 @@
 
 namespace ConsumerApp.Models
 {
-    // Kafka'dan kelgan mahsulot
     public class ReceivedProduct
     {
         public int Id { get; set; }
@@ -15,12 +14,11 @@ namespace ConsumerApp.Models
         public DateTime CreatedDate { get; set; }
     }
 
-    // Tasdiqlash jarayoni uchun
     public class ProductApproval
     {
         public int Id { get; set; }
 
-        public int ProductId { get; set; } // Producer'dagi mahsulot ID
+        public int ProductId { get; set; } 
 
         [Required]
         public string ProductName { get; set; }
@@ -33,12 +31,10 @@ namespace ConsumerApp.Models
         public int Quantity { get; set; }
         public string? Manufacturer { get; set; }
 
-        // Kafka ma'lumotlari
-        public string KafkaMessage { get; set; } // To'liq JSON
+        public string KafkaMessage { get; set; } 
         public DateTime ReceivedDate { get; set; }
 
-        // Tasdiqlash holati
-        public string Status { get; set; } = "Pending"; // Pending, Approved, Rejected
+        public string Status { get; set; } = "Pending"; 
 
         public DateTime? ReviewedDate { get; set; }
         public string? ReviewedBy { get; set; }
@@ -49,11 +45,10 @@ namespace ConsumerApp.Models
         public string? Comments { get; set; }
     }
 
-    // Feedback (Producer'ga yuboriladi)
     public class ApprovalFeedback
     {
         public int ProductId { get; set; }
-        public string Status { get; set; } // Approved / Rejected
+        public string Status { get; set; } 
         public string? RejectionReason { get; set; }
         public DateTime ReviewedDate { get; set; }
         public string? ReviewedBy { get; set; }
