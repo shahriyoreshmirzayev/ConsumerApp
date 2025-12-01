@@ -10,7 +10,6 @@
     <p>Kafka orqali kelgan mahsulotlarni ko'rib chiqing</p>
 </div>
 
-<!-- Filter Tabs -->
 <div class="filter-tabs">
     <a href="@Url.Action("Index", new { filter = "pending" })"
        class="filter-tab @(currentFilter == "pending" ? "active" : "")">
@@ -181,7 +180,6 @@ else
             font-size: 1.1rem;
         }
 
-    /* Filter Tabs */
     .filter-tabs {
         display: flex;
         gap: 0.5rem;
@@ -210,7 +208,6 @@ else
             color: white;
         }
 
-    /* Bulk Actions */
     .bulk-actions {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 1.5rem;
@@ -238,7 +235,6 @@ else
         cursor: pointer;
     }
 
-    /* Products Grid */
     .products-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -478,7 +474,6 @@ else
             background: #218838;
         }
 
-    /* Empty State */
     .empty-state {
         background: white;
         padding: 4rem 2rem;
@@ -501,7 +496,6 @@ else
         color: #999;
     }
 
-    /* Responsive */
  
 
     {

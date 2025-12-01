@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ConsumerApp.Data;
+﻿using ConsumerApp.Data;
 using ConsumerApp.Models;
 using ConsumerApp.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ConsumerApp.Controllers
 {
@@ -12,10 +12,7 @@ namespace ConsumerApp.Controllers
         private readonly FeedbackProducerService _feedbackService;
         private readonly ILogger<ApprovalsController> _logger;
 
-        public ApprovalsController(
-            ApplicationDbContext context,
-            FeedbackProducerService feedbackService,
-            ILogger<ApprovalsController> logger)
+        public ApprovalsController(ApplicationDbContext context, FeedbackProducerService feedbackService, ILogger<ApprovalsController> logger)
         {
             _context = context;
             _feedbackService = feedbackService;
@@ -67,13 +64,13 @@ namespace ConsumerApp.Controllers
 
             if (approval.Status != "Pending")
             {
-                TempData["Error"] = "Bu mahsulot allaqachon ko'rib chiqilgan!";
+                TempData["Error"] = "Xatolik";
                 return RedirectToAction(nameof(Index));
             }
 
             approval.Status = "Approved";
             approval.ReviewedDate = DateTime.UtcNow;
-            approval.ReviewedBy = "Admin"; 
+            approval.ReviewedBy = "Admin";
             approval.Comments = comments;
 
             _context.Update(approval);
@@ -84,18 +81,19 @@ namespace ConsumerApp.Controllers
                 ProductId = approval.ProductId,
                 Status = "Approved",
                 ReviewedDate = approval.ReviewedDate.Value,
-                ReviewedBy = approval.ReviewedBy
+                ReviewedBy = approval.ReviewedBy,
+                Comments = comments
             };
 
             var feedbackSent = await _feedbackService.SendFeedbackAsync(feedback);
 
             if (feedbackSent)
             {
-                TempData["Success"] = $"'{approval.ProductName}' tasdiqlandi va Producer'ga xabar yuborildi!";
+                TempData["Success"] = $"{approval.ProductName} Xatolik";
             }
             else
             {
-                TempData["Warning"] = $"'{approval.ProductName}' tasdiqlandi, lekin Producer'ga xabar yuborilmadi!";
+                TempData["Warning"] = $"{approval.ProductName} Xatolik";
             }
 
             return RedirectToAction(nameof(Index));
@@ -107,7 +105,7 @@ namespace ConsumerApp.Controllers
         {
             if (string.IsNullOrWhiteSpace(rejectionReason))
             {
-                TempData["Error"] = "Rad etish sababini kiriting!";
+                TempData["Error"] = "Xatolik";
                 return RedirectToAction(nameof(Review), new { id });
             }
 
@@ -118,7 +116,7 @@ namespace ConsumerApp.Controllers
 
             if (approval.Status != "Pending")
             {
-                TempData["Error"] = "Bu mahsulot allaqachon ko'rib chiqilgan!";
+                TempData["Error"] = "Xatolik!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -144,11 +142,11 @@ namespace ConsumerApp.Controllers
 
             if (feedbackSent)
             {
-                TempData["Success"] = $"'{approval.ProductName}' rad etildi va Producer'ga xabar yuborildi!";
+                TempData["Success"] = $"{approval.ProductName} ' Xatolik";
             }
             else
             {
-                TempData["Warning"] = $"'{approval.ProductName}' rad etildi, lekin Producer'ga xabar yuborilmadi!";
+                TempData["Warning"] = $"{approval.ProductName} ' Xatolik";
             }
 
             return RedirectToAction(nameof(Index));
@@ -160,7 +158,7 @@ namespace ConsumerApp.Controllers
         {
             if (selectedIds == null || !selectedIds.Any())
             {
-                TempData["Error"] = "Hech qanday mahsulot tanlanmagan!";
+                TempData["Error"] = "Xatolik";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -190,7 +188,7 @@ namespace ConsumerApp.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"{successCount} ta mahsulot tasdiqlandi!";
+            TempData["Success"] = $"{successCount}  tasdiqlandi!";
             return RedirectToAction(nameof(Index));
         }
 

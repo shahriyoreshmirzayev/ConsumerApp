@@ -39,6 +39,8 @@ namespace ConsumerApp.Services
                     WriteIndented = true
                 });
 
+                _logger.LogInformation("Yuborilmoqda: ", jsonMessage);
+
                 var result = await producer.ProduceAsync(
                     _feedbackTopic,
                     new Message<Null, string>
@@ -49,7 +51,7 @@ namespace ConsumerApp.Services
                 );
 
                 _logger.LogInformation(
-                    "Feedback yuborildi - ProductId: {ProductId}, Status: {Status}, Topic: {Topic}, Offset: {Offset}",
+                    "Yuborildi",
                     feedback.ProductId,
                     feedback.Status,
                     result.Topic,
@@ -60,12 +62,12 @@ namespace ConsumerApp.Services
             }
             catch (ProduceException<Null, string> ex)
             {
-                _logger.LogError(ex, "Feedback yuborishda xatolik - Reason: {Reason}", ex.Error.Reason);
+                _logger.LogError(ex, "Xatolik", ex.Error.Reason);
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Feedback xatolik");
+                _logger.LogError(ex, "Xatolik");
                 return false;
             }
         }

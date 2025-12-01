@@ -52,5 +52,6 @@ namespace ConsumerApp.Models
         public string? RejectionReason { get; set; }
         public DateTime ReviewedDate { get; set; }
         public string? ReviewedBy { get; set; }
+        public string? Comments { get; set; } 
     }
 }
