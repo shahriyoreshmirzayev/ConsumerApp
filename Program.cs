@@ -1,6 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using ConsumerApp.Data;
-using ConsumerApp.Services;
+﻿using ConsumerApp;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +8,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddHostedService<KafkaConsumerService>(); 
+builder.Services.AddHostedService<KafkaConsumerService>();
 builder.Services.AddSingleton<FeedbackProducerService>();
 
 var app = builder.Build();

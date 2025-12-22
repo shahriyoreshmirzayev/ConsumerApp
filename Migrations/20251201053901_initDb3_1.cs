@@ -2,21 +2,20 @@
 
 #nullable disable
 
-namespace ConsumerApp.Migrations
+namespace ConsumerApp;
+
+/// <inheritdoc />
+public partial class initDb3_1 : Migration
 {
     /// <inheritdoc />
-    public partial class initDb3_1 : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
 
-        }
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
 
-        }
     }
 }

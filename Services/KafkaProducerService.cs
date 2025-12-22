@@ -1,8 +1,7 @@
 ﻿using Confluent.Kafka;
-using ConsumerApp.Models;
 using System.Text.Json;
 
-namespace ConsumerApp.Services;
+namespace ConsumerApp;
 
 public class FeedbackProducerService
 {

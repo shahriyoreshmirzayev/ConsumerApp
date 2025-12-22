@@ -1,10 +1,8 @@
 ﻿using Confluent.Kafka;
-using ConsumerApp.Data;
-using ConsumerApp.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace ConsumerApp.Services;
+namespace ConsumerApp;
 
 public class KafkaConsumerService : BackgroundService
 {
@@ -35,8 +33,8 @@ public class KafkaConsumerService : BackgroundService
             GroupId = _groupId,
             AutoOffsetReset = AutoOffsetReset.Earliest,
 
-            EnableAutoCommit = false, 
-            IsolationLevel = IsolationLevel.ReadCommitted, 
+            EnableAutoCommit = false,
+            IsolationLevel = IsolationLevel.ReadCommitted,
 
             SessionTimeoutMs = 30000,
             MaxPollIntervalMs = 300000,
@@ -136,7 +134,7 @@ public class KafkaConsumerService : BackgroundService
             {
                 _logger.LogInformation("Mahsulot allaqachon mavjud", receivedProduct.Id);
                 await transaction.CommitAsync();
-                return true; 
+                return true;
             }
 
             var approval = new ProductApproval
@@ -158,7 +156,7 @@ public class KafkaConsumerService : BackgroundService
 
             await transaction.CommitAsync();
 
-            _logger.LogInformation( "Transaction committed saved successfully", receivedProduct.Name, receivedProduct.Id);
+            _logger.LogInformation("Transaction committed saved successfully", receivedProduct.Name, receivedProduct.Id);
 
             return true;
         }
