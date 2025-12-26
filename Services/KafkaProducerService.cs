@@ -47,13 +47,7 @@ public class FeedbackProducerService
                 }
             );
 
-            _logger.LogInformation(
-                "Yuborildi",
-                feedback.ProductId,
-                feedback.Status,
-                result.Topic,
-                result.Offset.Value
-            );
+            _logger.LogInformation("Yuborildi", feedback.ProductId, feedback.Status, result.Topic, result.Offset.Value);
 
             return true;
         }

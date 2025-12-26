@@ -20,6 +20,16 @@ public class ApprovalsController : Controller
     {
         ViewData["CurrentFilter"] = filter;
 
+        var totalCount = await _context.ProductApprovals.CountAsync();
+        var pendingCount = await _context.ProductApprovals.CountAsync(p => p.Status == "Pending");
+        var approvedCount = await _context.ProductApprovals.CountAsync(p => p.Status == "Approved");
+        var rejectedCount = await _context.ProductApprovals.CountAsync(p => p.Status == "Rejected");
+
+        ViewBag.TotalCount = totalCount;
+        ViewBag.PendingCount = pendingCount;
+        ViewBag.ApprovedCount = approvedCount;
+        ViewBag.RejectedCount = rejectedCount;
+
         IQueryable<ProductApproval> query = _context.ProductApprovals;
 
         query = filter.ToLower() switch
@@ -54,46 +64,68 @@ public class ApprovalsController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Approve(int id, string comments)
     {
-        var approval = await _context.ProductApprovals.FindAsync(id);
+        using var dbTransaction = await _context.Database.BeginTransactionAsync();
 
-        if (approval == null)
-            return NotFound();
-
-        if (approval.Status != "Pending")
+        try
         {
-            TempData["Error"] = "Xatolik";
+            _logger.LogInformation("Approve transaction started - ApprovalId: {ApprovalId}", id);
+
+            var approval = await _context.ProductApprovals.FindAsync(id);
+
+            if (approval == null)
+            {
+                await dbTransaction.RollbackAsync();
+                return NotFound();
+            }
+
+            if (approval.Status != "Pending")
+            {
+                await dbTransaction.RollbackAsync();
+                TempData["Error"] = "Bu mahsulot allaqachon ko'rib chiqilgan!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            approval.Status = "Approved";
+            approval.ReviewedDate = DateTime.UtcNow;
+            approval.ReviewedBy = "Admin";
+            approval.Comments = comments;
+
+            _context.Update(approval);
+            await _context.SaveChangesAsync();
+
+            var feedback = new ApprovalFeedback
+            {
+                ProductId = approval.ProductId,
+                Status = "Approved",
+                ReviewedDate = approval.ReviewedDate.Value,
+                ReviewedBy = approval.ReviewedBy,
+                Comments = comments
+            };
+
+            var feedbackSent = await _feedbackService.SendFeedbackAsync(feedback);
+
+            if (!feedbackSent)
+            {
+                await dbTransaction.RollbackAsync();
+                _logger.LogError("Feedback send failed, rolling back database");
+                TempData["Error"] = "Kafka'ga yuborishda xatolik, amaliyot bekor qilindi!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await dbTransaction.CommitAsync();
+
+            _logger.LogInformation("Approve transaction committed - ProductId: {ProductId}", approval.ProductId);
+            TempData["Success"] = $"'{approval.ProductName}' tasdiqlandi va Producer'ga xabar yuborildi!";
+
             return RedirectToAction(nameof(Index));
         }
-
-        approval.Status = "Approved";
-        approval.ReviewedDate = DateTime.UtcNow;
-        approval.ReviewedBy = "Admin";
-        approval.Comments = comments;
-
-        _context.Update(approval);
-        await _context.SaveChangesAsync();
-
-        var feedback = new ApprovalFeedback
+        catch (Exception ex)
         {
-            ProductId = approval.ProductId,
-            Status = "Approved",
-            ReviewedDate = approval.ReviewedDate.Value,
-            ReviewedBy = approval.ReviewedBy,
-            Comments = comments
-        };
-
-        var feedbackSent = await _feedbackService.SendFeedbackAsync(feedback);
-
-        if (feedbackSent)
-        {
-            TempData["Success"] = $"{approval.ProductName} Xatolik";
+            await dbTransaction.RollbackAsync();
+            _logger.LogError(ex, "Approve transaction failed");
+            TempData["Error"] = "Tasdiqlashda xatolik yuz berdi!";
+            return RedirectToAction(nameof(Index));
         }
-        else
-        {
-            TempData["Warning"] = $"{approval.ProductName} Xatolik";
-        }
-
-        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
@@ -102,52 +134,75 @@ public class ApprovalsController : Controller
     {
         if (string.IsNullOrWhiteSpace(rejectionReason))
         {
-            TempData["Error"] = "Xatolik";
+            TempData["Error"] = "Rad etish sababini kiriting!";
             return RedirectToAction(nameof(Review), new { id });
         }
 
-        var approval = await _context.ProductApprovals.FindAsync(id);
+        using var dbTransaction = await _context.Database.BeginTransactionAsync();
 
-        if (approval == null)
-            return NotFound();
-
-        if (approval.Status != "Pending")
+        try
         {
-            TempData["Error"] = "Xatolik!";
+            _logger.LogInformation("Reject transaction started - ApprovalId: {ApprovalId}", id);
+
+            var approval = await _context.ProductApprovals.FindAsync(id);
+
+            if (approval == null)
+            {
+                await dbTransaction.RollbackAsync();
+                return NotFound();
+            }
+
+            if (approval.Status != "Pending")
+            {
+                await dbTransaction.RollbackAsync();
+                TempData["Error"] = "Bu mahsulot allaqachon ko'rib chiqilgan!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            approval.Status = "Rejected";
+            approval.ReviewedDate = DateTime.UtcNow;
+            approval.ReviewedBy = "Admin";
+            approval.RejectionReason = rejectionReason;
+            approval.Comments = comments;
+
+            _context.Update(approval);
+            await _context.SaveChangesAsync();
+
+            var feedback = new ApprovalFeedback
+            {
+                ProductId = approval.ProductId,
+                Status = "Rejected",
+                RejectionReason = rejectionReason,
+                ReviewedDate = approval.ReviewedDate.Value,
+                ReviewedBy = approval.ReviewedBy,
+                Comments = comments
+            };
+
+            var feedbackSent = await _feedbackService.SendFeedbackAsync(feedback);
+
+            if (!feedbackSent)
+            {
+                await dbTransaction.RollbackAsync();
+                _logger.LogError("Feedback send failed, rolling back database");
+                TempData["Error"] = "Kafka'ga yuborishda xatolik, amaliyot bekor qilindi!";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await dbTransaction.CommitAsync();
+
+            _logger.LogInformation("Reject transaction committed - ProductId: {ProductId}, Reason: {Reason}",
+                approval.ProductId, rejectionReason);
+            TempData["Success"] = $"'{approval.ProductName}' rad etildi va Producer'ga xabar yuborildi!";
+
             return RedirectToAction(nameof(Index));
         }
-
-        approval.Status = "Rejected";
-        approval.ReviewedDate = DateTime.UtcNow;
-        approval.ReviewedBy = "Admin";
-        approval.RejectionReason = rejectionReason;
-        approval.Comments = comments;
-
-        _context.Update(approval);
-        await _context.SaveChangesAsync();
-
-        var feedback = new ApprovalFeedback
+        catch (Exception ex)
         {
-            ProductId = approval.ProductId,
-            Status = "Rejected",
-            RejectionReason = rejectionReason,
-            ReviewedDate = approval.ReviewedDate.Value,
-            ReviewedBy = approval.ReviewedBy,
-            Comments = comments
-        };
-
-        var feedbackSent = await _feedbackService.SendFeedbackAsync(feedback);
-
-        if (feedbackSent)
-        {
-            TempData["Success"] = $"{approval.ProductName} ' Xatolik";
+            await dbTransaction.RollbackAsync();
+            _logger.LogError(ex, "Reject transaction failed");
+            TempData["Error"] = "Rad etishda xatolik yuz berdi!";
+            return RedirectToAction(nameof(Index));
         }
-        else
-        {
-            TempData["Warning"] = $"{approval.ProductName} ' Xatolik";
-        }
-
-        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
@@ -156,7 +211,7 @@ public class ApprovalsController : Controller
     {
         if (selectedIds == null || !selectedIds.Any())
         {
-            TempData["Error"] = "Xatolik";
+            TempData["Error"] = "Hech qanday mahsulot tanlanmagan!";
             return RedirectToAction(nameof(Index));
         }
 
@@ -164,29 +219,76 @@ public class ApprovalsController : Controller
             .Where(p => selectedIds.Contains(p.Id) && p.Status == "Pending")
             .ToListAsync();
 
+        if (!approvals.Any())
+        {
+            TempData["Error"] = "Tasdiqlash uchun mahsulotlar yo'q!";
+            return RedirectToAction(nameof(Index));
+        }
+
         int successCount = 0;
+        int errorCount = 0;
+        var errorProducts = new List<string>();
 
         foreach (var approval in approvals)
         {
-            approval.Status = "Approved";
-            approval.ReviewedDate = DateTime.UtcNow;
-            approval.ReviewedBy = "Admin";
+            using var dbTransaction = await _context.Database.BeginTransactionAsync();
 
-            var feedback = new ApprovalFeedback
+            try
             {
-                ProductId = approval.ProductId,
-                Status = "Approved",
-                ReviewedDate = approval.ReviewedDate.Value,
-                ReviewedBy = approval.ReviewedBy
-            };
+                _logger.LogInformation("Bulk approve - Processing: {ProductName}", approval.ProductName);
 
-            await _feedbackService.SendFeedbackAsync(feedback);
-            successCount++;
+                approval.Status = "Approved";
+                approval.ReviewedDate = DateTime.UtcNow;
+                approval.ReviewedBy = "Admin";
+
+                _context.Update(approval);
+                await _context.SaveChangesAsync();
+
+                var feedback = new ApprovalFeedback
+                {
+                    ProductId = approval.ProductId,
+                    Status = "Approved",
+                    ReviewedDate = approval.ReviewedDate.Value,
+                    ReviewedBy = approval.ReviewedBy
+                };
+
+                var feedbackSent = await _feedbackService.SendFeedbackAsync(feedback);
+
+                if (!feedbackSent)
+                {
+                    throw new Exception("Feedback send failed");
+                }
+
+                await dbTransaction.CommitAsync();
+                successCount++;
+
+                _logger.LogInformation("Bulk approve success: {ProductName}", approval.ProductName);
+            }
+            catch (Exception ex)
+            {
+                await dbTransaction.RollbackAsync();
+                errorCount++;
+                errorProducts.Add(approval.ProductName);
+                _logger.LogError(ex, "Bulk approve failed: {ProductName}", approval.ProductName);
+            }
+
+            await Task.Delay(50);
         }
 
-        await _context.SaveChangesAsync();
+        // Natija
+        if (successCount > 0 && errorCount == 0)
+        {
+            TempData["Success"] = $"{successCount} ta mahsulot tasdiqlandi!";
+        }
+        else if (successCount > 0 && errorCount > 0)
+        {
+            TempData["Warning"] = $"{successCount} ta tasdiqlandi, {errorCount} ta xatolik: {string.Join(", ", errorProducts)}";
+        }
+        else
+        {
+            TempData["Error"] = $"Hech qanday mahsulot tasdiqlanmadi!";
+        }
 
-        TempData["Success"] = $"{successCount}  tasdiqlandi!";
         return RedirectToAction(nameof(Index));
     }
 
@@ -197,7 +299,34 @@ public class ApprovalsController : Controller
             Total = await _context.ProductApprovals.CountAsync(),
             Pending = await _context.ProductApprovals.CountAsync(p => p.Status == "Pending"),
             Approved = await _context.ProductApprovals.CountAsync(p => p.Status == "Approved"),
-            Rejected = await _context.ProductApprovals.CountAsync(p => p.Status == "Rejected")
+            Rejected = await _context.ProductApprovals.CountAsync(p => p.Status == "Rejected"),
+
+            TodayReceived = await _context.ProductApprovals
+                .CountAsync(p => p.ReceivedDate.Date == DateTime.UtcNow.Date),
+
+            TodayReviewed = await _context.ProductApprovals
+                .CountAsync(p => p.ReviewedDate.HasValue &&
+                               p.ReviewedDate.Value.Date == DateTime.UtcNow.Date),
+
+            TopRejectionReasons = await _context.ProductApprovals
+                .Where(p => p.Status == "Rejected" && !string.IsNullOrEmpty(p.RejectionReason))
+                .GroupBy(p => p.RejectionReason)
+                .Select(g => new { Reason = g.Key, Count = g.Count() })
+                .OrderByDescending(x => x.Count)
+                .Take(5)
+                .ToListAsync(),
+
+            Last7Days = Enumerable.Range(0, 7).Select(i =>
+            {
+                var date = DateTime.UtcNow.Date.AddDays(-i);
+                return new
+                {
+                    Date = date.ToString("dd.MM"),
+                    Received = _context.ProductApprovals.Count(p => p.ReceivedDate.Date == date),
+                    Approved = _context.ProductApprovals.Count(p => p.ReviewedDate.HasValue && p.ReviewedDate.Value.Date == date && p.Status == "Approved"),
+                    Rejected = _context.ProductApprovals.Count(p => p.ReviewedDate.HasValue && p.ReviewedDate.Value.Date == date && p.Status == "Rejected")
+                };
+            }).Reverse().ToList()
         };
 
         return View(stats);
